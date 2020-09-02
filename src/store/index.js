@@ -4,9 +4,10 @@ import * as projects from '@/store/modules/ProjectStore.js';
 import * as authUser from '@/store/modules/AuthStore.js';
 import * as employees from '@/store/modules/EmployeesStore.js';
 import * as notification from '@/store/modules/NotificationStore.js';
+import * as timesheet from '@/store/modules/TimesheetStore.js';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  modules: { projects, authUser, employees, notification },
+  modules: { projects, authUser, employees, notification, timesheet },
 });

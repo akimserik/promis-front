@@ -5,11 +5,11 @@
       <v-toolbar-title>{{ $route.name }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn v-if="loggedIn" text small class="button">
-        {{
-        currentUser.user.name
-        }}
+        {{ currentUser.user.name }}
       </v-btn>
-      <v-btn v-if="loggedIn" text small class="button" @click="logout">Logout</v-btn>
+      <v-btn v-if="loggedIn" text small class="button" @click="logout"
+        >Logout</v-btn
+      >
       <v-btn v-else to="/login" text small class="button">Login</v-btn>
     </v-app-bar>
 
@@ -26,11 +26,11 @@
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
+            <v-list-item-title>Home</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item link to="/projects">
+        <v-list-item v-if="allowProjects" link to="/projects">
           <v-list-item-action>
             <v-icon>mdi-contacts</v-icon>
           </v-list-item-action>
@@ -39,7 +39,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item link to="/employees">
+        <v-list-item v-if="allowEmployees" link to="/employees">
           <v-list-item-action>
             <v-icon>mdi-teach</v-icon>
           </v-list-item-action>
@@ -53,7 +53,7 @@
             <v-icon>mdi-mail</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title>Timesheet</v-list-item-title>
+            <v-list-item-title>My Timesheet</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -74,6 +74,19 @@ export default {
   }),
   computed: {
     ...authComputed,
+    allowEmployees() {
+      return (
+        this.currentUser.user.role === 'admin' ||
+        this.currentUser.user.role === 'HR'
+      );
+    },
+    allowProjects() {
+      return (
+        this.currentUser.user.role === 'admin' ||
+        this.currentUser.user.role === 'HR' ||
+        this.currentUser.user.role === 'support'
+      );
+    },
   },
   methods: {
     logout() {

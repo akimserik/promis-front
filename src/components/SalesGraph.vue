@@ -8,7 +8,7 @@
         height="100"
         padding="24"
         stroke-linecap="round"
-        smooth
+        show-labels
       />
     </v-card-text>
 

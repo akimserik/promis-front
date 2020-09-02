@@ -11,6 +11,14 @@ export const state = {
     results: 0,
     status: '',
   },
+  myProjects: {
+    data: {
+      data: [],
+    },
+    requestedAt: Date,
+    results: 0,
+    status: '',
+  },
 };
 
 export const mutations = {
@@ -18,10 +26,17 @@ export const mutations = {
     state.projects = projects;
   },
   UPDATE_PROJECT(state, project) {
-    state.projects.data.data.splice(project._id, 1, project);
+    state.projects.data.data.splice(
+      state.projects.data.data.findIndex((el) => el.id == project.id),
+      1,
+      project
+    );
   },
   ADD_PROJECT(state, project) {
     state.projects.data.data.push(project);
+  },
+  SET_MY_PROJECTS(state, projects) {
+    state.myProjects = projects;
   },
 };
 
@@ -33,11 +48,29 @@ export const actions = {
         commit('SET_PROJECTS', response.data);
       })
       .catch((err) => {
+        const message = err.response ? err.response.data.message : err;
         const notification = {
           type: 'error',
-          message: err.response.data.message,
+          message: message,
         };
         dispatch('notification/add', notification, { root: true });
+        throw err;
+      });
+  },
+  fetchMyProjects({ commit, dispatch }) {
+    return apiService
+      .getMyProjects()
+      .then((response) => {
+        commit('SET_MY_PROJECTS', response.data.data);
+      })
+      .catch((err) => {
+        const message = err.response ? err.response.data.message : err;
+        const notification = {
+          type: 'error',
+          message: message,
+        };
+        dispatch('notification/add', notification, { root: true });
+        throw err;
       });
   },
   updateProject({ commit, dispatch }, project) {
@@ -45,14 +78,15 @@ export const actions = {
       .updateProject(project)
       .then(() => {
         commit('UPDATE_PROJECT', project);
-        const notification = {
-          type: 'success',
-          message: `Project ${project.engagementCode} was updated!`,
-        };
-        dispatch('notification/add', notification, { root: true });
       })
       .catch((err) => {
-        console.log(err.response.data.message);
+        const message = err.response ? err.response.data.message : err;
+        const notification = {
+          type: 'error',
+          message: message,
+        };
+        dispatch('notification/add', notification, { root: true });
+        throw err;
       });
   },
   createProject({ commit, dispatch }, project) {
@@ -60,16 +94,12 @@ export const actions = {
       .createNewProject(project)
       .then(() => {
         commit('ADD_PROJECT', project);
-        const notification = {
-          type: 'success',
-          message: 'New project has been created!',
-        };
-        dispatch('notification/add', notification, { root: true });
       })
       .catch((err) => {
+        const message = err.response ? err.response.data.message : err;
         const notification = {
           type: 'error',
-          message: err.response.data.message,
+          message: message,
         };
         dispatch('notification/add', notification, { root: true });
         throw err;

@@ -9,18 +9,22 @@
 </template>
 
 <script>
+// import axios from 'axios';
 import AppNav from '@/components/AppNav';
 import NotificationContainer from '@/components/NotificationContainer.vue';
 import { authComputed } from '@/helpers/authHelpers.js';
+import { mapState } from 'vuex';
 
 export default {
   components: { AppNav, NotificationContainer },
   computed: {
     ...authComputed,
+    ...mapState(['authUser', 'authUser']),
   },
   created() {
-    if (!this.loggedIn && !(this.$route.name === 'Login'))
+    if (!this.loggedIn) {
       this.$router.push({ name: 'Login' });
+    }
   },
 };
 </script>

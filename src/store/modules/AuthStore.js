@@ -1,5 +1,6 @@
 import axios from 'axios';
 import apiService from '@/services/apiService.js';
+import jwt from 'jsonwebtoken';
 
 export const namespaced = true;
 
@@ -15,8 +16,11 @@ export const mutations = {
     apiService.setUserToken(userData.token);
   },
   CLEAR_USER_DATA() {
-    localStorage.removeItem('user');
-    location.reload();
+    if (localStorage.getItem('user')) {
+      localStorage.removeItem('user');
+      location.reload();
+      delete axios.defaults.headers.common['Authorization'];
+    }
   },
 };
 
@@ -42,5 +46,14 @@ export const getters = {
       return state.user.data;
     }
     return state.user;
+  },
+  tokenExpired(state) {
+    if (state.user) {
+      const { exp } = jwt.decode(state.user.token);
+      if (exp < (new Date().getTime() + 1) / 1000) {
+        return true;
+      }
+    }
+    return false;
   },
 };

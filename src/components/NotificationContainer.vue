@@ -16,6 +16,9 @@ export default {
   components: {
     NotificationBar,
   },
+  data() {
+    return {};
+  },
   computed: mapState('notification', ['notifications']),
 };
 </script>

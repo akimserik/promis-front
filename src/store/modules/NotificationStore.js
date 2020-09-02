@@ -10,14 +10,14 @@ export const mutations = {
   PUSH(state, notification) {
     state.notifications.push({
       ...notification,
-      id: nextId++,
-    });
+      id: nextId++
+    })
   },
   DELETE(state, notificationToRemove) {
     state.notifications = state.notifications.filter(
-      (notification) => notification.id !== notificationToRemove.id
-    );
-  },
+      notification => notification.id !== notificationToRemove.id
+    )
+  }
 };
 export const actions = {
   add({ commit }, notification) {
@@ -25,5 +25,11 @@ export const actions = {
   },
   remove({ commit }, notificationToRemove) {
     commit('DELETE', notificationToRemove);
+  },
+};
+
+export const getters = {
+  currentNotification: (state) => {
+    return state.notifications;
   },
 };

@@ -1,15 +1,14 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-data-table
       :headers="headers"
       :items="projectsArray"
-      item-key="engagementCode"
       class="elevation-1"
       :search="search"
       :loading="!tableLoaded"
       loading-text="Loading... Please wait"
       show-group-by
-      group-by="serviceLine"
+      @dblclick:row="doubleClick"
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
@@ -28,8 +27,8 @@
 
           <v-dialog v-model="dialog" fullscreen>
             <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on"
-                >New Item</v-btn
+              <v-btn small outlined color="primary" dark class="mb-2" v-on="on"
+                ><v-icon left>mdi-plus-circle-outline</v-icon>Add new</v-btn
               >
             </template>
 
@@ -111,7 +110,7 @@
                         :items="partners"
                         v-model="editedItem.partner"
                         item-text="name"
-                        item-value="_id"
+                        return-object
                         label="Partner"
                         required
                         :error-messages="partnerErrors"
@@ -124,7 +123,7 @@
                         :items="managers"
                         v-model="editedItem.manager"
                         item-text="name"
-                        item-value="_id"
+                        return-object
                         label="Manager"
                         required
                         :error-messages="managerErrors"
@@ -137,7 +136,7 @@
                         :items="inCharges"
                         v-model="editedItem.inCharge"
                         item-text="name"
-                        item-value="_id"
+                        return-object
                         label="In charge"
                       ></v-select>
                     </v-col>
@@ -195,84 +194,23 @@
 
                   <v-row>
                     <v-col cols="12" sm="6" md="4">
-                      <v-menu
-                        v-model="menuContractSignedDate"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        max-width="290px"
-                        min-width="290px"
-                      >
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-text-field
-                            v-model="computedDateFormatted"
-                            label="Contract signed date"
-                            hint="DD/MM/YYYY"
-                            persistent-hint
-                            prepend-icon="mdi-calendar"
-                            show-current="true"
-                            readonly
-                            v-bind="attrs"
-                            v-on="on"
-                          ></v-text-field>
-                        </template>
-
-                        <v-date-picker
-                          v-model="editedItem.contractSignedDate"
-                          no-title
-                          @input="menuContractSignedDate = false"
-                        >
-                          <v-spacer></v-spacer>
-                          <v-btn
-                            text
-                            color="primary"
-                            @click="menuContractSignedDate = false"
-                            >Cancel</v-btn
-                          >
-                        </v-date-picker>
-                      </v-menu>
+                      <BaseDatePicker
+                        :label="'Contract signed date'"
+                        :date="editedItem.contractSignedDate"
+                        v-model="editedItem.contractSignedDate"
+                      ></BaseDatePicker>
                     </v-col>
 
                     <v-col cols="12" sm="6" md="4">
-                      <v-menu
-                        v-model="menuExpectedDateOfReport"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        max-width="290px"
-                        min-width="290px"
-                      >
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-text-field
-                            v-model="computedExpectedDateOfReportFormatted"
-                            label="Expected date of report"
-                            hint="DD/MM/YYYY"
-                            persistent-hint
-                            prepend-icon="mdi-calendar"
-                            show-current="true"
-                            required
-                            readonly
-                            v-bind="attrs"
-                            v-on="on"
-                            :error-messages="expectedReportDateErrors"
-                            @blur="$v.editedItem.expectedDateOfReport.$touch()"
-                          ></v-text-field>
-                        </template>
-
-                        <v-date-picker
-                          v-model="editedItem.expectedDateOfReport"
-                          no-title
-                          @input="menuExpectedDateOfReport = false"
-                        >
-                          <v-spacer></v-spacer>
-                          <v-btn
-                            text
-                            color="primary"
-                            @click="menuExpectedDateOfReport = false"
-                            >Cancel</v-btn
-                          >
-                        </v-date-picker>
-                      </v-menu>
+                      <BaseDatePicker
+                        :label="'Expected date of report'"
+                        :date="editedItem.expectedDateOfReport"
+                        v-on:input="inputExpectedDateOfReport"
+                        v-model="editedItem.expectedDateOfReport"
+                        required
+                        :errorMessages="expectedReportDateErrors"
+                        @blur="$v.editedItem.expectedDateOfReport.$touch()"
+                      ></BaseDatePicker>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -285,14 +223,24 @@
               </v-card-actions>
             </v-card>
           </v-dialog>
+
+          <ProjectManagerEditionDialog
+            v-if="dialogManager"
+            :project="editedItem"
+            :inCharges="inCharges"
+            @closeDialogManager="dialogManager = false"
+          />
         </v-toolbar>
       </template>
 
       <template v-slot:item.actions="{ item }">
         <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon v-if="isAdmin" small @click="deleteItem(item)"
-          >mdi-delete</v-icon
+        <v-icon small class="mr-2" @click="openManagerDialog(item)"
+          >mdi-shield-edit</v-icon
         >
+        <!-- <v-icon v-if="isAdmin" small @click="deleteItem(item)"
+          >mdi-delete</v-icon
+        > -->
       </template>
 
       <template v-slot:item.feeKZT="{ item }">{{
@@ -314,13 +262,16 @@ import {
 } from 'vuelidate/lib/validators';
 import { mapState } from 'vuex';
 import NotificationContainer from '@/components/NotificationContainer.vue';
+import ProjectManagerEditionDialog from '@/components/ProjectManagerEditionDialog.vue';
+import { serviceLines } from '@/data/catalogs.js';
 
 export default {
   name: 'ProjectsPage',
-  components: { NotificationContainer },
+  components: { NotificationContainer, ProjectManagerEditionDialog },
   data() {
     return {
       dialog: false,
+      dialogManager: false,
       search: '',
       headers: [
         { text: 'Engagement code', value: 'engagementCode', groupable: false },
@@ -351,7 +302,6 @@ export default {
       editedIndex: -1,
       editedItem: {},
       defaultItem: {},
-      serviceLines: ['Audit', 'Advisory', 'Tax', 'Outsourcing'],
       menuContractSignedDate: false,
       menuExpectedDateOfReport: false,
     };
@@ -405,11 +355,24 @@ export default {
 
   mounted() {
     this.$store.dispatch('projects/fetchProjects', this.userToken);
-    this.$store.dispatch('employees/fetchEmployees', this.userToken);
+    this.$v.$reset();
+  },
+
+  watch: {
+    dialog(val) {
+      val || this.close();
+    },
+    dialogManager(val) {
+      val || this.close();
+    },
   },
 
   computed: {
     ...mapState(['projects', 'authUser', 'employees']),
+
+    serviceLines() {
+      return serviceLines;
+    },
 
     tableLoaded() {
       return this.projectsArray.length > 0;
@@ -572,7 +535,14 @@ export default {
     editItem(item) {
       this.editedIndex = this.projectsArray.indexOf(item);
       this.editedItem = Object.assign({}, item);
+      this.$v.$reset();
       this.dialog = true;
+    },
+
+    openManagerDialog(item) {
+      this.editedIndex = this.projectsArray.indexOf(item);
+      this.editedItem = Object.assign({}, item);
+      this.dialogManager = true;
     },
 
     deleteItem(item) {
@@ -597,21 +567,13 @@ export default {
           this.$store
             .dispatch('projects/updateProject', this.editedItem)
             .then(() => {
-              this.$store.dispatch('projects/fetchProjects', this.userToken);
               this.close();
-            })
-            .catch((err) => {
-              this.error = err.response.data.message;
             });
         } else {
           this.$store
             .dispatch('projects/createProject', this.editedItem)
             .then(() => {
-              this.$store.dispatch('projects/fetchProjects', this.userToken);
               this.close();
-            })
-            .catch((err) => {
-              this.error = err.response.data.message;
             });
         }
       }
@@ -620,6 +582,12 @@ export default {
       if (!date) return null;
       const [year, month, day] = date.substr(0, 10).split('-');
       return `${day}/${month}/${year}`;
+    },
+    inputExpectedDateOfReport() {
+      this.$v.editedItem.expectedDateOfReport.$touch();
+    },
+    doubleClick: function (event, row) {
+      this.editItem(row.item);
     },
   },
 };

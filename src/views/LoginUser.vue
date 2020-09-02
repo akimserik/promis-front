@@ -3,7 +3,12 @@
     <v-container fill-height>
       <v-row align="center" justify="center">
         <v-col cols="12" sm="4">
-          <v-img :src="require('@/assets/logo.svg')" class="my-3" contain height="50"></v-img>
+          <v-img
+            :src="require('@/assets/logo.svg')"
+            class="my-3"
+            contain
+            height="50"
+          ></v-img>
           <v-card width="400" class="mx-auto mt-5">
             <v-card-title class="pb-0">
               <h3>Login</h3>
@@ -35,7 +40,9 @@
                 <p class="red--text">{{ error }}</p>
                 <v-divider></v-divider>
                 <v-card-actions>
-                  <v-btn type="submit" name="button" color="indigo" dark>Login</v-btn>
+                  <v-btn type="submit" name="button" color="indigo" dark
+                    >Login</v-btn
+                  >
                 </v-card-actions>
               </v-form>
             </v-card-text>
@@ -48,7 +55,8 @@
 
 <script>
 import { required, email } from 'vuelidate/lib/validators';
-import { mapState } from "vuex";
+import { mapState } from 'vuex';
+import { authComputed } from '@/helpers/authHelpers.js';
 
 export default {
   name: 'Login',
@@ -73,7 +81,8 @@ export default {
   },
 
   computed: {
-    ...mapState(["authUser", "authUser"]),
+    ...mapState(['authUser', 'authUser']),
+    ...authComputed,
     emailErrors() {
       const errors = [];
       if (!this.$v.email.$dirty) return errors;
@@ -108,7 +117,8 @@ export default {
     },
   },
   created() {
-    if (this.authUser.loggedIn) this.$router.push({ name: 'Dashboard' });
+    if (this.loggedIn && !this.tokenExpired)
+      this.$router.push({ name: 'Dashboard' });
   },
 };
 </script>
