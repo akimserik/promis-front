@@ -2,7 +2,8 @@ const axios = require('axios');
 import store from '@/store';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  // baseURL: 'http://localhost:3000/api/v1',
+  baseURL: 'api/v1',
   withCredentials: false,
   headers: {
     Accept: 'application/json',
@@ -26,6 +27,9 @@ apiClient.interceptors.response.use(
 );
 
 export default {
+  login(credentials) {
+    return apiClient.post('/users/login', credentials);
+  },
   getProjects() {
     return apiClient.get('/projects');
   },
@@ -52,6 +56,9 @@ export default {
   },
   setUserToken(token) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  },
+  clearAuthHeader() {
+    delete apiClient.defaults.headers.common['Authorization'];
   },
   getTimesheet() {
     return apiClient.get(`/timesheets/my-stats`);

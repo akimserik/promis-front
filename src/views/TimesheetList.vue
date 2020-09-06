@@ -183,7 +183,7 @@ export default {
         {
           text: 'Code',
           value: 'engagementCode',
-          width: '100px',
+          width: '120px',
         },
         {
           text: 'Name',

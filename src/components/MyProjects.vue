@@ -49,7 +49,7 @@
 <script>
 import { mapState } from 'vuex';
 import { dateToLocalFormat } from '@/plugins/dateConverter.js';
-import ProjectManagerEditionDialog from '@/components/ProjectManagerEditionDialog.vue';
+import ProjectManagerEditionDialog from '@/views/ProjectManagerEditionDialog.vue';
 export default {
   name: 'MyProjects',
   components: {
